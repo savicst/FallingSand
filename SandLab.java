@@ -13,6 +13,8 @@ public class SandLab
   public static final int EMPTY = 0;
   public static final int METAL = 1;
   public static final int SAND = 2;
+  public static final int WATER = 3;
+  public static final int LAVA = 4;
   
   //do not add any more fields
   private int[][] grid;
@@ -21,10 +23,13 @@ public class SandLab
   public SandLab(int numRows, int numCols)
   {
     String[] names;
-    names = new String[3];
+    names = new String[5];
     names[EMPTY] = "Empty";
     names[METAL] = "Metal";
     names[SAND] = "Sand";
+    names[WATER] = "Water";
+    names[LAVA] = "Lava" ;
+
     display = new SandDisplay("Falling Sand", numRows, numCols, names);
     grid = new int[numRows][numCols];
   }
@@ -35,20 +40,26 @@ public class SandLab
   }
 
   //copies each element of grid into the display
-  public void updateDisplay()
-  {for(int r = 0; r < grid.length; r ++) {
-    for (int c = 0; c < grid[0].length; c++) {
-      if (grid[r][c] == EMPTY) {
-        display.setColor(r, c, Color.black);
-      }
-      if (grid[r][c] == METAL) {
-        display.setColor(r, c, Color.gray);
-      }
-      if (grid[r][c] == SAND) {
-        display.setColor(r, c, new Color(255, 204, 51));
+  public void updateDisplay() {
+    for (int r = 0; r < grid.length; r++) {
+      for (int c = 0; c < grid[0].length; c++) {
+        if (grid[r][c] == EMPTY) {
+          display.setColor(r, c, new Color(16, 16, 17, 255));
+        }
+        if (grid[r][c] == METAL) {
+          display.setColor(r, c, new Color(58, 26, 84));
+        }
+        if (grid[r][c] == SAND) {
+          display.setColor(r, c, new Color(199, 171, 82));
+        }
+        if (grid[r][c] == WATER) {
+          display.setColor(r, c, new Color(65, 180, 187, 178));
+        }
+        if (grid[r][c] == LAVA) {
+          display.setColor(r, c, new Color(246, 49, 95));
+        }
       }
     }
-  }
   }
 
   //called repeatedly.
@@ -56,12 +67,69 @@ public class SandLab
   public void step()
   { int randomRow = (int)(Math.random() * (grid.length-1));
     int randomCol = (int)(Math.random() * (grid[0].length-1));
-    if (grid[randomRow][randomCol] == SAND && grid[randomRow+1][randomCol] == EMPTY){
-      grid[randomRow][randomCol] = EMPTY;
+    //Sand procedure
+    if (grid[randomRow][randomCol] == SAND && (grid[randomRow+1][randomCol] == EMPTY || grid[randomRow+1][randomCol] == WATER || grid[randomRow+1][randomCol]== LAVA)){
+      grid[randomRow][randomCol] = grid[randomRow+1][randomCol];
       grid[randomRow+1][randomCol] = SAND;
     }
+
+    //Water procedure
+    int left = 0;int right = 1;
+    if (grid[randomRow][randomCol] == WATER){
+      int direction = (int)(Math.random()+.5);
+      if (grid[randomRow+1][randomCol] == EMPTY){
+        grid[randomRow][randomCol] = EMPTY;
+        grid[randomRow+1][randomCol] = WATER;
+      }
+      else if (direction==left && randomCol>0 && grid[randomRow][randomCol-1]==EMPTY){
+        grid[randomRow][randomCol] = EMPTY;
+        grid[randomRow][randomCol-1] = WATER;
+      }
+      else if (direction==right && randomCol<grid.length-1 && grid[randomRow][randomCol+1]==EMPTY){
+        grid[randomRow][randomCol] = EMPTY;
+        grid[randomRow][randomCol+1] = WATER;
+      }
+    }
+
+    //Lava procedure
+    if (grid[randomRow][randomCol] == LAVA){
+
+      int direction = (int)(Math.random()+.5);
+      //down
+      if (grid[randomRow+1][randomCol] == EMPTY){
+        grid[randomRow][randomCol] = EMPTY;
+        grid[randomRow+1][randomCol] = LAVA;
+      }
+      else if (grid[randomRow+1][randomCol] == WATER){
+        grid[randomRow][randomCol] = EMPTY;
+        grid[randomRow+1][randomCol] = METAL;
+      }
+      //left
+      else if (direction==left && randomCol>0) {
+        if (grid[randomRow][randomCol - 1] == EMPTY) {
+          grid[randomRow][randomCol] = EMPTY;
+          grid[randomRow][randomCol-1] = LAVA;
+        }
+        else if (grid[randomRow][randomCol - 1] == WATER){
+          grid[randomRow][randomCol] = EMPTY;
+          grid[randomRow][randomCol-1] = METAL;
+        }
+      }
+      //right
+      else if (direction==right && randomCol<grid.length-1){
+        if(grid[randomRow][randomCol+1]==EMPTY) {
+          grid[randomRow][randomCol] = EMPTY;
+          grid[randomRow][randomCol + 1] = LAVA;
+        }
+        else if (grid[randomRow][randomCol+1] == WATER){
+          grid[randomRow][randomCol] = EMPTY;
+          grid[randomRow][randomCol+1] = METAL;
+        }
+      }
+    }
   }
-  
+
+
   //do not modify
   public void run()
   {
